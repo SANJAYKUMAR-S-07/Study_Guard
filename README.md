@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Study Guard: VS Code Sleep Alarm (Browser-based Tracking)
 
 This extension monitors your eyes while you study or code. Because VS Code restricts webcam access in Webviews due to security guidelines, this extension uses a hybrid architecture:
@@ -40,3 +41,6 @@ To run and test the extension locally:
 * **Trigger Delay**: Adjust the slider (0.5s to 4.0s) in the browser to change how long your eyes must be closed before the siren activates. The default is **1.5s** to prevent normal blinking from sounding the alarm.
 * **Sensitivity**: Adjust the percentage threshold for what counts as "closed". A higher percentage means your eyelids must be almost completely shut to trigger.
 * **Test Alarm Sound**: Click the "Test Alarm Sound" button on the browser page to verify your speakers are active.
+=======
+# Study_Guard
+>>>>>>> 60d63421aa898362d7c7ab8c5a3882befdbf9650
