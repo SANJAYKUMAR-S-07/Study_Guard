@@ -14,8 +14,7 @@ This extension monitors your eyes while you study or code. Because VS Code restr
 To run and test the extension locally:
 
 1. **Open the project folder in VS Code**:
-   * Open VS Code, select **File > Open Folder...**, and select this directory:
-     `C:\Users\sk sanjay\.gemini\antigravity\scratch\sleep-alarm`
+   * Open VS Code, select **File > Open Folder...**
    * *Alternatively, set this folder as your active workspace.*
 
 2. **Launch the Extension Host**:
@@ -42,5 +41,4 @@ To run and test the extension locally:
 * **Sensitivity**: Adjust the percentage threshold for what counts as "closed". A higher percentage means your eyelids must be almost completely shut to trigger.
 * **Test Alarm Sound**: Click the "Test Alarm Sound" button on the browser page to verify your speakers are active.
 =======
-# Study_Guard
->>>>>>> 60d63421aa898362d7c7ab8c5a3882befdbf9650
+
