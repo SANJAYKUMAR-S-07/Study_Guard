@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Alarm Controls</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', var(--vscode-font-family, sans-serif);
+            color: var(--vscode-foreground, #cccccc);
+            background-color: var(--vscode-editor-background, #1e1e1e);
+            padding: 16px 12px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--vscode-settings-headerForeground, #ffffff);
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            margin: 0;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--vscode-descriptionForeground, #888888);
+        }
+
+        .button {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: none;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            background-color: var(--vscode-button-background, #007acc);
+            color: var(--vscode-button-foreground, white);
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .button:hover {
+            background-color: var(--vscode-button-hoverBackground, #0062a3);
+        }
+
+        .status-pill {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #10b981;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        ol {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.75rem;
+            color: var(--vscode-foreground, #ccc);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        li::marker {
+            color: var(--vscode-button-background, #007acc);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>Study Guard Console</h3>
+        <p>Because VS Code blocks camera access in sidebar tabs due to security guidelines, Study Guard runs the camera engine inside your web browser.</p>
+        
+        <button id="open-btn" class="button">🚀 Open Tracker in Browser</button>
+    </div>
+
+    <div class="card">
+        <div class="status-pill">
+            <span>Local Service Status</span>
+            <div class="status-indicator">
+                <span class="dot"></span>
+                <span>Active (Port <span id="port-lbl">{{PORT}}</span>)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="gap: 6px;">
+        <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--vscode-descriptionForeground, #888);">How to Use</span>
+        <ol>
+            <li>Click the <b>Open Tracker in Browser</b> button above.</li>
+            <li>Grant camera permissions to <code>localhost</code> in your browser.</li>
+            <li>Adjust trigger delay and sensitivity sliders on the browser console.</li>
+            <li>Leave the browser page open in the background (or split-screen) and start coding in VS Code!</li>
+        </ol>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        const openBtn = document.getElementById('open-btn');
+        const portLbl = document.getElementById('port-lbl');
+
+        openBtn.addEventListener('click', () => {
+            vscode.postMessage({ command: 'openBrowser' });
+        });
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'setPort') {
+                portLbl.innerText = message.port;
+            }
+        });
+    </script>
+</body>
+</html>

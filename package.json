@@ -1,0 +1,35 @@
+{
+  "name": "sleep-alarm",
+  "displayName": "Study Sleep Alarm",
+  "description": "Monitors eye closure via webcam and alerts you in VS Code when you fall asleep.",
+  "version": "1.0.0",
+  "publisher": "developer",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sleep-alarm-sidebar",
+          "title": "Sleep Alarm",
+          "icon": "$(eye)"
+        }
+      ]
+    },
+    "views": {
+      "sleep-alarm-sidebar": [
+        {
+          "type": "webview",
+          "id": "sleep-alarm.monitorView",
+          "name": "Eye Monitor"
+        }
+      ]
+    }
+  }
+}

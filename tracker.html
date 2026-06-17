@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guard - Active Tracking</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success-color: #10b981;
+            --warning-color: #ef4444;
+            --neutral-color: #94a3b8;
+            --accent-color: #6366f1;
+            --text-color: #f1f5f9;
+        }
+
+        body {
+            font-family: var(--font-family);
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            margin: 0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 6px 0;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--neutral-color);
+        }
+
+        #video-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #000;
+        }
+
+        #video-wrapper.active {
+            border-color: var(--success-color);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+        }
+
+        #video-wrapper.warning {
+            border-color: var(--warning-color);
+            box-shadow: 0 0 35px rgba(239, 68, 68, 0.55);
+            animation: ringPulse 1s infinite alternate;
+        }
+
+        @keyframes ringPulse {
+            0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+            100% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.7); }
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror view */
+            opacity: 0.9;
+        }
+
+        .overlay-card {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-live {
+            background-color: var(--success-color);
+            animation: blinker 1.5s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0.3; }
+        }
+
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status-value {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--success-color);
+            border-radius: 3px;
+            transition: width 0.1s ease, background-color 0.2s;
+        }
+
+        .meters-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 4px;
+        }
+
+        .meter-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .meter-label {
+            font-size: 0.75rem;
+            color: var(--neutral-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .button {
+            font-family: var(--font-family);
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .button-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .settings-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--neutral-color);
+            margin: 0 0 4px 0;
+        }
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .setting-row label {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            margin: 8px 0;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        #log-console {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #a5b4fc;
+            max-height: 80px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Study Guard</h1>
+            <p>Webcam eye monitoring status console</p>
+        </div>
+
+        <div id="video-wrapper">
+            <video id="webcam" autoplay playsinline muted></video>
+            <div class="overlay-card" id="camera-overlay">
+                <span id="fps-label">FPS: 0</span>
+                <span class="badge" id="live-badge" style="display: none;">Live</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="status-header">
+                <span>System Status</span>
+                <span class="status-value" id="status-text" style="color: var(--accent-color);">INITIALIZING AI...</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar" id="status-bar" style="background-color: var(--accent-color);"></div>
+            </div>
+            <div class="meters-grid">
+                <div class="meter-box">
+                    <div class="meter-label">
+                        <span>Left Eye</span>
+                        <span id="lbl-left">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="bar-left" style="background-color: var(--accent-color);"></div>
+                    </div>
+                </div>
+                <div class="meter-box">
+                    <div class="meter-label">
+                        <span>Right Eye</span>
+                        <span id="lbl-right">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-bar" id="bar-right" style="background-color: var(--accent-color);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button id="toggle-btn" class="button button-primary">Start Monitoring</button>
+            <button id="test-sound-btn" class="button button-secondary">Test Alarm Sound</button>
+        </div>
+
+        <div class="card">
+            <div class="settings-title">Diagnostics Console</div>
+            <div id="log-console"></div>
+        </div>
+
+        <div class="card">
+            <div class="settings-title">Detection Adjustments</div>
+            <div class="setting-row">
+                <label for="close-time">
+                    <span>Trigger Delay</span>
+                    <span id="lbl-time" style="color: var(--accent-color); font-weight: 600;">1.5s</span>
+                </label>
+                <input type="range" id="close-time" min="0.5" max="4.0" step="0.1" value="1.5" class="slider">
+            </div>
+            <div class="setting-row" style="margin-top: 8px;">
+                <label for="close-sensitivity">
+                    <span>Eye Closure Threshold</span>
+                    <span id="lbl-sensitivity" style="color: var(--accent-color); font-weight: 600;">55%</span>
+                </label>
+                <input type="range" id="close-sensitivity" min="40" max="90" step="5" value="55" class="slider">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const videoWrapper = document.getElementById('video-wrapper');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const testSoundBtn = document.getElementById('test-sound-btn');
+        const statusBar = document.getElementById('status-bar');
+        const statusText = document.getElementById('status-text');
+        const liveBadge = document.getElementById('live-badge');
+        const fpsLabel = document.getElementById('fps-label');
+        const logConsole = document.getElementById('log-console');
+        
+        const barLeft = document.getElementById('bar-left');
+        const barRight = document.getElementById('bar-right');
+        const lblLeft = document.getElementById('lbl-left');
+        const lblRight = document.getElementById('lbl-right');
+        
+        const sliderTime = document.getElementById('close-time');
+        const lblTime = document.getElementById('lbl-time');
+        const sliderSensitivity = document.getElementById('close-sensitivity');
+        const lblSensitivity = document.getElementById('lbl-sensitivity');
+
+        // Config variables
+        let alarmTriggerTimeMs = 1500;
+        let eyeClosedThreshold = 0.55;
+
+        // Model & loop state
+        let faceLandmarker;
+        let active = false;
+        let modelLoaded = false;
+        let lastVideoTime = -1;
+        let eyesClosedStartTime = null;
+        
+        // Sound & FPS trackers
+        let alarmPlaying = false;
+        let audioContext = null;
+        let alarmInterval = null;
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+        
+        // CPU Throttling (runs detection at 10 FPS instead of 60 FPS)
+        let lastProcessTime = 0;
+        const PROCESS_INTERVAL_MS = 100;
+
+        // Diagnostics Logger
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logConsole.innerText += `[${time}] ${msg}\n`;
+            logConsole.scrollTop = logConsole.scrollHeight;
+            console.log(`[${time}] ${msg}`);
+        }
+
+        // Settings Listeners
+        sliderTime.addEventListener('input', (e) => {
+            alarmTriggerTimeMs = parseFloat(e.target.value) * 1000;
+            lblTime.innerText = e.target.value + 's';
+        });
+
+        sliderSensitivity.addEventListener('input', (e) => {
+            eyeClosedThreshold = parseInt(e.target.value) / 100;
+            lblSensitivity.innerText = e.target.value + '%';
+        });
+
+        // Dynamic script loader with CDN fallback support
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.crossOrigin = "anonymous";
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load ${url}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize Server-Sent Events (SSE) to receive instructions from VS Code Host
+        function setupEventSource() {
+            log("Opening SSE listener on /api/events...");
+            const eventSource = new EventSource('/api/events');
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    log(`Received SSE command: ${message.command}`);
+                    if (message.command === 'stopAlarm') {
+                        resetAlarm();
+                    }
+                } catch(e) {
+                    console.error("Failed to parse event message:", e);
+                }
+            };
+
+            eventSource.onerror = (err) => {
+                log("SSE connection interrupted. Auto-reconnecting in background...");
+            };
+        }
+
+        // Initialize MediaPipe model with CDN fallbacks
+        async function initializeModel() {
+            log("Loading MediaPipe packages...");
+            
+            const cdns = [
+                {
+                    js: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs",
+                    wasm: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+                },
+                {
+                    js: "https://unpkg.com/@mediapipe/tasks-vision@0.10.8/vision_bundle.mjs",
+                    wasm: "https://unpkg.com/@mediapipe/tasks-vision@0.10.8/wasm"
+                }
+            ];
+
+            let loadedCdn = null;
+            let moduleObject = null;
+
+            for (const cdn of cdns) {
+                try {
+                    log(`Attempting dynamic ES module import from: ${cdn.js}`);
+                    moduleObject = await import(cdn.js);
+                    if (moduleObject && moduleObject.FilesetResolver) {
+                        loadedCdn = cdn;
+                        log("Success! Library loaded as ES module.");
+                        break;
+                    }
+                } catch (err) {
+                    log(`Warning: Failed to load module from ${cdn.js}: ${err.message}`);
+                }
+            }
+
+            if (!loadedCdn) {
+                statusText.innerText = "CDN BLOCKED";
+                statusText.style.color = "var(--warning-color)";
+                statusBar.style.width = "100%";
+                statusBar.style.backgroundColor = "var(--warning-color)";
+                log("AI LOAD ERROR: All CDN modules (jsDelivr, unpkg) failed to load.");
+                log("Please check your internet connection. Ad-blockers or firewall rules may be blocking access to these script CDNs.");
+                return;
+            }
+
+            try {
+                const { FilesetResolver, FaceLandmarker } = moduleObject;
+                log(`Initializing WebAssembly FilesetResolver from ${loadedCdn.wasm}...`);
+                const vision = await FilesetResolver.forVisionTasks(loadedCdn.wasm);
+                
+                log("Downloading Face Landmarker model (~5.6MB)...");
+                faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    outputFaceBlendshapes: true,
+                    runningMode: "VIDEO",
+                    numFaces: 1
+                });
+                
+                modelLoaded = true;
+                log("Face tracking model initialized successfully (GPU accelerated).");
+                
+                if (active) {
+                    statusText.innerText = "MONITORING ACTIVE";
+                    statusText.style.color = "var(--success-color)";
+                    statusBar.style.backgroundColor = "var(--success-color)";
+                } else {
+                    statusText.innerText = "READY";
+                    statusText.style.color = "var(--success-color)";
+                    statusBar.style.backgroundColor = "var(--success-color)";
+                }
+                statusBar.style.width = "100%";
+
+                setupEventSource();
+            } catch (err) {
+                statusText.innerText = "AI FAILED";
+                statusText.style.color = "var(--warning-color)";
+                statusBar.style.width = "100%";
+                statusBar.style.backgroundColor = "var(--warning-color)";
+                log(`AI INFERENCE RESOLVER ERROR: ${err.message}`);
+                log("Make sure you are connected to the internet. Tracking will not function without resolving model tasks.");
+            }
+        }
+
+        // Webcam stream handlers
+        async function startWebcam() {
+            log("Requesting camera access (getUserMedia)...");
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 320, height: 240, frameRate: { max: 15 } } 
+                });
+                
+                video.muted = true;
+                video.setAttribute('playsinline', '');
+                video.srcObject = stream;
+                active = true;
+                
+                // Explicitly play to prevent browser pauses
+                await video.play();
+                log("Video playback started.");
+                
+                const track = stream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                log(`Camera connected: ${track.label} (${settings.width}x${settings.height})`);
+                
+                toggleBtn.innerText = "Stop Monitoring";
+                toggleBtn.style.background = "linear-gradient(135deg, #dc2626, #ef4444)";
+                
+                if (modelLoaded) {
+                    statusText.innerText = "MONITORING ACTIVE";
+                    statusText.style.color = "var(--success-color)";
+                    statusBar.style.backgroundColor = "var(--success-color)";
+                } else {
+                    statusText.innerText = "AI LOADING...";
+                    statusText.style.color = "var(--accent-color)";
+                    statusBar.style.backgroundColor = "var(--accent-color)";
+                }
+                statusBar.style.width = "100%";
+                
+                liveBadge.style.display = "inline-block";
+                liveBadge.className = "badge badge-live";
+                videoWrapper.className = "active";
+                
+                // Reset stats
+                eyesClosedStartTime = null;
+                lastFrameTime = performance.now();
+                frameCount = 0;
+                
+                requestAnimationFrame(predictLoop);
+            } catch (err) {
+                statusText.innerText = "CAMERA ERROR";
+                statusText.style.color = "var(--warning-color)";
+                log(`CAMERA ACCESS DENIED/ERROR: ${err.name} - ${err.message}`);
+                alert("Could not access camera. Please click allow when prompted or check browser privacy settings.");
+            }
+        }
+
+        function stopWebcam() {
+            log("Stopping webcam stream...");
+            const stream = video.srcObject;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            video.srcObject = null;
+            active = false;
+            
+            toggleBtn.innerText = "Start Monitoring";
+            toggleBtn.style.background = "";
+            
+            if (modelLoaded) {
+                statusText.innerText = "READY";
+                statusText.style.color = "var(--success-color)";
+            } else {
+                statusText.innerText = "INITIALIZING AI...";
+                statusText.style.color = "";
+            }
+            
+            liveBadge.style.display = "none";
+            videoWrapper.className = "";
+            fpsLabel.innerText = "FPS: 0";
+            
+            // Clean up alarm elements
+            resetAlarm();
+            clearBars();
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            if (active) {
+                stopWebcam();
+            } else {
+                startWebcam();
+            }
+        });
+
+        // Alarm sound synthesizer
+        function startAlarm() {
+            if (alarmPlaying) return;
+            alarmPlaying = true;
+            log("ALARM TRIGGERED: Eyes closed too long.");
+
+            videoWrapper.className = "warning";
+            statusText.innerText = "🚨 SLEEP DETECTED! 🚨";
+            statusText.style.color = "var(--warning-color)";
+            statusBar.style.backgroundColor = "var(--warning-color)";
+
+            // Initialize audio synthesizer context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Send alarm command to VS Code Extension via relative HTTP API
+            log("Sending POST /api/alarm to VS Code extension...");
+            fetch('/api/alarm', { method: 'POST' })
+                .then(() => log("VS Code informed of alarm."))
+                .catch(err => log(`Failed to report to VS Code: ${err.message}`));
+
+            // Dual tone obnoxious siren
+            let highTone = true;
+            alarmInterval = setInterval(() => {
+                if (!alarmPlaying) return;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(highTone ? 1000 : 850, audioContext.currentTime);
+                highTone = !highTone;
+                
+                gain.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
+                
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.35);
+            }, 380);
+        }
+
+        function resetAlarm() {
+            const wasPlaying = alarmPlaying;
+            alarmPlaying = false;
+            eyesClosedStartTime = null;
+            
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Report stop event back to VS Code
+            if (wasPlaying) {
+                log("Resetting alarm state...");
+                fetch('/api/stop', { method: 'POST' }).catch(err => console.error("API error:", err));
+            }
+            
+            if (active) {
+                videoWrapper.className = "active";
+                statusText.innerText = "MONITORING ACTIVE";
+                statusText.style.color = "var(--success-color)";
+                statusBar.style.backgroundColor = "var(--success-color)";
+                statusBar.style.width = "100%";
+            }
+        }
+
+        // Test audio local simulation
+        testSoundBtn.addEventListener('click', () => {
+            if (alarmPlaying) {
+                resetAlarm();
+                return;
+            }
+            
+            log("Testing alarm sound locally...");
+            testSoundBtn.innerText = "Stop Test";
+            startAlarm();
+            
+            setTimeout(() => {
+                resetAlarm();
+                testSoundBtn.innerText = "Test Alarm Sound";
+            }, 2500);
+        });
+
+        function clearBars() {
+            barLeft.style.width = "0%";
+            barRight.style.width = "0%";
+            lblLeft.innerText = "0%";
+            lblRight.innerText = "0%";
+        }
+
+        // Main frame execution loop
+        async function predictLoop() {
+            if (!active) return;
+            
+            const now = performance.now();
+            frameCount++;
+            
+            // FPS calculation
+            if (now - lastFrameTime >= 1000) {
+                fps = Math.round((frameCount * 1000) / (now - lastFrameTime));
+                fpsLabel.innerText = "FPS: " + fps;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+
+            // Model inference tracking
+            if (modelLoaded && now - lastProcessTime >= PROCESS_INTERVAL_MS && video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                lastProcessTime = now;
+
+                try {
+                    const results = faceLandmarker.detectForVideo(video, now);
+
+                    if (results && results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+                        const blendshapes = results.faceBlendshapes[0].categories;
+                        
+                        const leftBlink = blendshapes.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0;
+                        const rightBlink = blendshapes.find(c => c.categoryName === "eyeBlinkRight")?.score || 0;
+
+                        // Telemetry update
+                        const leftPercent = Math.round(leftBlink * 100);
+                        const rightPercent = Math.round(rightBlink * 100);
+                        
+                        barLeft.style.width = leftPercent + "%";
+                        lblLeft.innerText = leftPercent + "%";
+                        barRight.style.width = rightPercent + "%";
+                        lblRight.innerText = rightPercent + "%";
+
+                        // Warning colors based on thresholds
+                        const warnColor = "var(--warning-color)";
+                        const okayColor = "var(--accent-color)";
+                        barLeft.style.backgroundColor = leftBlink > eyeClosedThreshold ? warnColor : okayColor;
+                        barRight.style.backgroundColor = rightBlink > eyeClosedThreshold ? warnColor : okayColor;
+
+                        // Use the average of both eyes to counteract shadow/camera offsets
+                        const avgBlink = (leftBlink + rightBlink) / 2;
+
+                        // Eye closure verification
+                        if (avgBlink >= eyeClosedThreshold) {
+                            if (!eyesClosedStartTime) {
+                                eyesClosedStartTime = Date.now();
+                            } else {
+                                const closedDuration = Date.now() - eyesClosedStartTime;
+                                
+                                // Visual bar countdown
+                                if (!alarmPlaying) {
+                                    const progress = Math.min(100, (closedDuration / alarmTriggerTimeMs) * 100);
+                                    statusBar.style.width = (100 - progress) + "%";
+                                    statusBar.style.backgroundColor = "var(--warning-color)";
+                                    statusText.innerText = `EYES CLOSED (${Math.round((alarmTriggerTimeMs - closedDuration)/100)/10}s)`;
+                                    statusText.style.color = "var(--warning-color)";
+                                }
+                                
+                                if (closedDuration >= alarmTriggerTimeMs) {
+                                    startAlarm();
+                                }
+                            }
+                        } else {
+                            // Open eye event resets state
+                            if (alarmPlaying) {
+                                resetAlarm();
+                            } else {
+                                eyesClosedStartTime = null;
+                                statusBar.style.width = "100%";
+                                statusBar.style.backgroundColor = "var(--success-color)";
+                                statusText.innerText = "MONITORING ACTIVE";
+                                statusText.style.color = "var(--success-color)";
+                            }
+                        }
+                    } else {
+                        // Alert if face leaves the camera frame entirely
+                        if (!alarmPlaying) {
+                            statusText.innerText = "FACE NOT FOUND";
+                            statusText.style.color = "var(--neutral-color)";
+                            statusBar.style.backgroundColor = "var(--neutral-color)";
+                            statusBar.style.width = "0%";
+                        }
+                    }
+                } catch (err) {
+                    log(`AI Detection Error: ${err.message}`);
+                }
+            }
+
+            requestAnimationFrame(predictLoop);
+        }
+
+        // Init on page load
+        log("Study Guard initializing...");
+        initializeModel();
+    </script>
+</body>
+</html>
